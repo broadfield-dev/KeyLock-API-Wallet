@@ -1,3 +1,4 @@
+# keylock-steganography-tool/setup.py
 import os
 import re
 from setuptools import setup, find_packages
@@ -16,15 +17,15 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
     requirements = f.read().splitlines()
 
 setup(
-    name="keylock-steganography-tool",
+    name="keylock-api-wallet", # Changed name to reflect new repo name
     version=get_version(),
     author="Your Name / KeyLock Team", # TODO: Replace with your name/team
     author_email="your.email@example.com", # TODO: Replace with your email
     description="Securely embed and extract API key-value pairs in PNG images using steganography and encryption.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/keylock-steganography-tool", # TODO: Replace with your GitHub repo URL
-    packages=['keylock'], # Explicitly list our package
+    url="https://github.com/user/KeyLock-API-Wallet", # UPDATED URL
+    packages=['keylock'],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -32,7 +33,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        "License :: OSI Approved :: MIT License", # Ensure you add an MIT LICENSE file
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Security :: Cryptography",
         "Topic :: Multimedia :: Graphics",
@@ -46,7 +47,4 @@ setup(
             'keylock-app=keylock.app:main',
         ],
     },
-    # If you had non-Python files inside your 'keylock' package (e.g. font files, templates)
-    # you would need include_package_data=True and a MANIFEST.in file or package_data.
-    # For this project, it's not strictly necessary as fonts are system-dependent.
 )
