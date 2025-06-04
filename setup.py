@@ -17,14 +17,14 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
     requirements = f.read().splitlines()
 
 setup(
-    name="keylock-api-wallet", # Changed name to reflect new repo name
+    name="keylock-api-wallet",
     version=get_version(),
-    author="Your Name / KeyLock Team", # TODO: Replace with your name/team
-    author_email="your.email@example.com", # TODO: Replace with your email
+    author="broadfield-dev",
+    author_email="email@example.com",
     description="Securely embed and extract API key-value pairs in PNG images using steganography and encryption.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/user/KeyLock-API-Wallet", # UPDATED URL
+    url="https://github.com/broadfield-dev/KeyLock-API-Wallet",
     packages=['keylock'],
     install_requires=requirements,
     classifiers=[
