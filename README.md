@@ -26,7 +26,7 @@ This section details how to install the KeyLock API Wallet. A virtual environmen
 
 Before installing, create and activate a virtual environment:
 
-   \```bash
+   ```bash
    # Navigate to your preferred projects directory
    # cd /path/to/your/projects
 
@@ -38,7 +38,7 @@ Before installing, create and activate a virtual environment:
    source keylock_env/bin/activate
    # On Windows (Command Prompt/PowerShell):
    .\keylock_env\Scripts\activate
-   \```
+   ```
    Your command prompt should now indicate that the virtual environment is active (e.g., `(keylock_env) $`).
 
 ### 2. Installation Options
@@ -49,37 +49,37 @@ Choose one of the following methods to install KeyLock:
 
 This is the simplest way to install the latest version for regular use:
 
-   \```bash
+   ```bash
    pip install git+https://github.com/user/KeyLock-API-Wallet.git
-   \```
+   ```
 
 #### Option B: Install from a Local Clone (for Users or Developers)
 
 If you have cloned the repository or downloaded the source code:
 
    1.  Clone the repository (if you haven't already):
-       \```bash
+       ```bash
        git clone https://github.com/user/KeyLock-API-Wallet.git
        cd KeyLock-API-Wallet
-       \```
+       ```
    2.  Install the package (ensure your virtual environment is active):
-       \```bash
+       ```bash
        pip install .
-       \```
+       ```
 
 #### Option C: Install in Editable Mode (for Developers)
 
 This method is ideal if you plan to modify the KeyLock source code. Changes you make to the code will be immediately effective without needing to reinstall.
 
    1.  Clone the repository (if you haven't already):
-       \```bash
+       ```bash
        git clone https://github.com/user/KeyLock-API-Wallet.git
        cd KeyLock-API-Wallet
-       \```
+       ```
    2.  Install in editable mode (ensure your virtual environment is active):
-       \```bash
+       ```bash
        pip install -e .
-       \```
+       ```
 
 All installation methods will automatically install the required dependencies listed in `requirements.txt` (Gradio, Pillow, cryptography, numpy).
 
@@ -92,15 +92,15 @@ Once KeyLock is installed, you can launch the Gradio web interface using one of 
 The `setup.py` file configures a command-line script called `keylock-app`. This is the most convenient way to run the application after any successful `pip install` (from GitHub, local clone, or editable mode).
 
    Simply type the following in your terminal:
-   \```bash
+   ```bash
    keylock-app
-   \```
+   ```
 
    The application will start, and you'll see output similar to this in your terminal:
-   \```
+   ```
    Running on local URL:  http://127.0.0.1:7860
    # Or a similar URL if port 7860 is in use.
-   \```
+   ```
    Open the provided URL in your web browser to access the KeyLock interface.
 
 ### Method 2: Running as a Python Module
@@ -108,9 +108,9 @@ The `setup.py` file configures a command-line script called `keylock-app`. This 
 This method is useful if you've installed in editable mode or if the `keylock` package is directly in your Python path (e.g., you are in the `KeyLock-API-Wallet` directory after cloning and have not installed it with `pip install .` yet, but the virtual environment has the dependencies).
 
    Execute the following command in your terminal:
-   \```bash
+   ```bash
    python -m keylock.app
-   \```
+   ```
    This directly invokes the `main()` function within the `keylock/app.py` module. You will see the same Gradio startup messages as with Method 1.
 
 ### Accessing the Interface
