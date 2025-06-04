@@ -174,7 +174,7 @@ def build_interface():
                         gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Carrier Image</h3>")
                         generate_carrier_cb = gr.Checkbox(label="Generate new KeyLock Wallet image",value=True)
                         input_carrier_img = gr.Image(label="Or Upload Your Own (PNG required)",type="pil",sources=["upload","clipboard"],visible=False)
-                        gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Visual Markings (Top-Left)</h3>")
+                        gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Visual Markings (Top-Right)</h3>")
                         show_keys_cb = gr.Checkbox(label=f"Show list of key names (up to {core.MAX_KEYS_TO_DISPLAY_OVERLAY})",value=True,info="If shown, appears below the 'Data Embedded' title. Max width ~30% of image.")
                         gr.Markdown("<p style='font-size:0.9em;margin-bottom:5px;'>A 'KeyLock: Data Embedded' title bar will always be present above the optional key list.</p>")
                         gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Output</h3>")
