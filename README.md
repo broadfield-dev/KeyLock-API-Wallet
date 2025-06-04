@@ -153,7 +153,3 @@ After starting the application using either method, open the URL displayed in yo
 -   **Data Capacity:** The amount of data that can be hidden is limited by the pixel dimensions of the carrier image (1 bit per color channel value, meaning 3 bits per pixel before considering the header). The visual overlay itself modifies some pixels before the LSB encoding process, which slightly reduces the available capacity. Embedding very large amounts of data may require a larger carrier image.
 -   **Sensitivity of Data:** While KeyLock uses strong encryption, remember that steganography is about hiding the *existence* of data. If the image itself is compromised and an attacker knows to look for LSB data, the security relies solely on the strength of your encryption password. Treat KeyLock PNGs containing sensitive information with the same care you would treat any encrypted file.
 
-## License
-
-This project is intended to be licensed under the MIT License. Please ensure a `LICENSE` file with the MIT License text is present in the repository.
-(Example: Create a `LICENSE` file and paste the text from [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
