@@ -215,7 +215,7 @@ body {
     background-color: rgba(46, 204, 113, 0.9) !important; /* Greenish background for user messages */
     color: black !important; /* Dark text for green background */
 }"""
-with gr.Blocks(theme=build_interface(), css=custom_css, title="KeyLock Secure Steganography") as keylock_app_interface:
+with gr.Blocks(theme=custom_theme, css=custom_css, title="KeyLock Secure Steganography") as keylock_app_interface:
     gr.Markdown("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock</span><h2 style='font-size:1.2em;color:#4A5568;margin-top:5px;'>Portable API key wallet in a PNG image</h2><p>Securely Embed & Extract API [KEY : Value] pairs in PNG Images</p></div><p style='text-align:center;max-width:700px;margin:0 auto 20px auto;font-size:1em;color:#4A5568;'>KeyLock encrypts data (AES-256-GCM), hides it in PNGs (LSB).  Use the decoded variables to update the system variables.</p>")
     gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Github: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet'>github.com/broadfield-dev/KeyLock-API-Wallet</p>")
     gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Decoder Module Github: <a href='https://github.com/broadfield-dev/keylock-decode'>github.com/broadfield-dev/keylock-decode</p>")
@@ -233,7 +233,7 @@ with gr.Blocks(theme=build_interface(), css=custom_css, title="KeyLock Secure St
             markdown_input_create = gr.Textbox(label="Markdown File Structure & Content", placeholder="Example:\n### File: app.py\n# ```python\nprint(\"Hello\")\n# ```", lines=15, interactive=True)
             create_btn = gr.Button("Create Space", variant="primary")
             create_output_md = gr.Markdown(label="Result")
-            create_btn.click(core.create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
+            create_btn.click(create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
 
 
         # --- "Browse & Edit Files" Tab (Hub-based) ---
