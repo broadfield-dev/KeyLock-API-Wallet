@@ -20,8 +20,7 @@ professional_theme = gr.themes.Base(
     neutral_hue=gr.themes.colors.slate,
     radius_size=gr.themes.sizes.radius_md,
     spacing_size=gr.themes.sizes.spacing_lg,
-    shadow_small="rgba(0,0,0,0.05) 0px 1px 2px 0px",
-    shadow_large="rgba(0,0,0,0.1) 0px 10px 15px -3px, rgba(0,0,0,0.05) 0px 4px 6px -2px"
+    
 ).set(
     # == Main Page & Default Text ==
     body_background_fill="#EDF2F7",        # Overall page background
@@ -59,8 +58,6 @@ professional_theme = gr.themes.Base(
     # Note: Sliders will generally pick up the primary_hue.
     # More specific slider properties are less common in .set() and can be complex.
 )
-# --- End Theme Definition ---
-
 
 def gradio_embed_data(*args): # Mock function
     kv_input, password_embed, _, _, _, output_fname_base = args
