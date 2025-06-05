@@ -150,6 +150,8 @@ def build_interface():
       background: linear-gradient(to bottom right, #2c3e50, #34495e); 
       color: #475b60; 
     }
+    span {
+        color: #fff;
     .gradio-container {
         background: transparent !important;
     }
