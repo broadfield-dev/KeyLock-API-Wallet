@@ -188,14 +188,14 @@ def build_interface():
                     with gr.Column(scale=2, min_width=350):
                         kv_input = gr.Textbox(label="Secret Data (Key:Value Pairs)",placeholder="API_KEY:value\nDB_PASS=secret",info="One per line. Separators: ':' or '='.",lines=8)
                         password_embed = gr.Textbox(label="Encryption Password",type="password",placeholder="Strong, unique password",info="Crucial for securing/retrieving data.")
-                        gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Carrier Image</h3>")
+                        gr.Markdown("<h3 style='margin-bottom:8px;'>Carrier Image</h3>")
                         generate_carrier_cb = gr.Checkbox(label="Generate new KeyLock Wallet image",value=True)
                         # MODIFIED LABEL HERE:
                         input_carrier_img = gr.Image(label="Or Upload Your Own (PNG recommended, other formats converted)",type="pil",sources=["upload","clipboard"],visible=False)
-                        gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Visual Markings (Top-Right)</h3>")
+                        gr.Markdown("<h3 style='margin-bottom:8px;'>Visual Markings (Top-Right)</h3>")
                         show_keys_cb = gr.Checkbox(label=f"Show list of key names (up to {core.MAX_KEYS_TO_DISPLAY_OVERLAY})",value=True,info="If shown, appears below the 'Data Embedded' title. Max width ~30% of image.")
                         gr.Markdown("<p style='font-size:0.9em;margin-bottom:5px;'>A 'KeyLock: Data Embedded' title bar will always be present above the optional key list.</p>")
-                        gr.Markdown("<h3 style='margin-bottom:8px;margin-top:15px;'>Output</h3>")
+                        gr.Markdown("<h3 style='margin-bottom:8px;'>Output</h3>")
                         output_fname_base = gr.Textbox(label="Base Name for Downloaded Stego Image",value="keylock_secure_image",info="E.g., my_secrets.png.")
                         embed_btn = gr.Button(f"Embed Secrets {ICON_EMBED}",variant="primary")
                     with gr.Column(scale=3, min_width=450):
