@@ -65,7 +65,6 @@ professional_theme = gr.themes.Base(
     border_color_primary="#E2E8F0",        # Light grey for general borders
 
     # Spacing & Radius
-    radius_size=gr.themes.sizes.radius_md, # "md" or "lg"
     spacing_size=gr.themes.sizes.spacing_lg, # "md" or "lg" for more breathing room
 
     # Specific component overrides if needed
