@@ -148,7 +148,7 @@ def build_interface():
     custom_css = """
     body {
       background: linear-gradient(to bottom right, #2c3e50, #34495e); 
-      color: #ecf0f1; 
+      color: #475b60; 
     }
     .gradio-container {
         background: transparent !important;
