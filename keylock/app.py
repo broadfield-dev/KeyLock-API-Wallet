@@ -44,42 +44,7 @@ except AttributeError:
     neutral_color = FallbackColors.neutral
 
 
-try:
-    light_theme = gr.themes.Soft(
-        primary_hue=blue_color,
-        secondary_hue=sky_color,
-        neutral_hue=slate_color,
-        font=font_family
-    ).set(
-        block_title_text_weight="600",
-        block_label_text_weight="500",
-        button_primary_background_fill_hover="#0A58CA",
-        button_primary_text_color="white"
-    )
-except AttributeError:
-    app_logger.error("Failed to create gr.themes.Soft. Using default theme.")
-    light_theme = None 
 
-try:
-    dark_theme = gr.themes.Base( 
-        primary_hue=blue_color,
-        secondary_hue=cyan_color,
-        neutral_hue=neutral_color,
-        font=font_family
-    ).set(
-        body_background_fill="#1E1E1E",
-        block_background_fill="#252526",
-        block_border_width="1px",
-        block_label_background_fill="*neutral_800",
-        input_background_fill="#3C3C3C",
-        button_primary_background_fill="*primary_600",
-        button_primary_background_fill_hover="*primary_500",
-        button_primary_text_color="white",
-        color_accent_soft="*secondary_800"
-    )
-except AttributeError:
-    app_logger.error("Failed to create gr.themes.Base. Dark theme might not be available or correct.")
-    dark_theme = None 
 
 
 ICON_EMBED = "➕"
@@ -176,7 +141,81 @@ def gradio_extract_data(stego_image_pil: Image.Image, password: str):
     except Exception as e: app_logger.error(f"Extract Error: {e}", exc_info=True); return f"Unexpected Error: {str(e)}", f"Error: {str(e)}"
 
 def build_interface():
-    with gr.Blocks(theme=light_theme, title="KeyLock Secure Steganography") as keylock_app_interface:
+    custom_theme = gr.themes.Base(
+    primary_hue="teal", # Teal for primary actions
+    secondary_hue="purple", # Purple for secondary elements
+    neutral_hue="zinc", # Zinc for neutral/backgrounds (dark gray)
+    text_size="sm", # Smaller text size for a denser, professional look
+    spacing_size="md", # Medium spacing
+    radius_size="sm", # Small border radius
+    font=["System UI", "sans-serif"] # Use system font
+)
+custom_css = """
+body {
+  background: linear-gradient(to bottom right, #2c3e50, #34495e); /* Dark blue-gray gradient */
+  color: #ecf0f1; /* Light text color for dark background */
+}
+/* Adjust main Gradio container background to be transparent to see body gradient */
+.gradio-container {
+    background: transparent !important;
+}
+/* Adjust component backgrounds for contrast against the body gradient */
+.gr-box, .gr-panel, .gr-pill {
+    background-color: rgba(44, 62, 80, 0.8) !important; /* Slightly lighter transparent dark blue-gray */
+    border-color: rgba(189, 195, 199, 0.2) !important; /* Light border for contrast */
+}
+/* Adjust inputs, dropdowns, buttons etc. for visibility */
+.gr-textbox, .gr-dropdown, .gr-button, .gr-code, .gr-chat-message {
+    border-color: rgba(189, 195, 199, 0.3) !important;
+    background-color: rgba(52, 73, 94, 0.9) !important; /* Slightly different dark blue-gray */
+    color: #ecf0f1 !important; /* Ensure text is light */
+}
+.gr-button.gr-button-primary {
+    background-color: #1abc9c !important; /* Teal from primary_hue */
+    color: white !important;
+    border-color: #16a085 !important;
+}
+.gr-button.gr-button-secondary {
+     background-color: #9b59b6 !important; /* Purple from secondary_hue */
+     color: white !important;
+     border-color: #8e44ad !important;
+}
+.gr-button.gr-button-stop {
+    background-color: #e74c3c !important; /* Red for stop/delete */
+    color: white !important;
+    border-color: #c0392b !important;
+}
+/* Adjust markdown backgrounds */
+.gr-markdown {
+    background-color: rgba(44, 62, 80, 0.7) !important; /* Transparent dark background */
+    padding: 10px; /* Add some padding */
+    border-radius: 5px; /* Rounded corners */
+}
+/* Style markdown headers for better contrast */
+.gr-markdown h1, .gr-markdown h2, .gr-markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
+    color: #ecf0f1 !important; /* Ensure headers are light */
+    border-bottom-color: rgba(189, 195, 199, 0.3) !important; /* Light separator */
+}
+/* Style code blocks within markdown */
+.gr-markdown pre code {
+    background-color: rgba(52, 73, 94, 0.95) !important; /* Darker code background */
+    border-color: rgba(189, 195, 199, 0.3) !important;
+}
+/* Chatbot specific styling */
+.gr-chatbot {
+    background-color: rgba(44, 62, 80, 0.7) !important;
+    border-color: rgba(189, 195, 199, 0.2) !important;
+}
+.gr-chatbot .message {
+    background-color: rgba(52, 73, 94, 0.9) !important; /* Dark background for messages */
+    color: #ecf0f1 !important;
+    border-color: rgba(189, 195, 199, 0.3) !important;
+}
+.gr-chatbot .message.user {
+    background-color: rgba(46, 204, 113, 0.9) !important; /* Greenish background for user messages */
+    color: black !important; /* Dark text for green background */
+}"""
+    with gr.Blocks(theme=custom_theme, css=custom_css, title="KeyLock Secure Steganography") as keylock_app_interface:
         gr.Markdown("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock</span><h2 style='font-size:1.2em;color:#4A5568;margin-top:5px;'>Portable API key wallet in a PNG image</h2><p>Securely Embed & Extract API [KEY : Value] pairs in PNG Images</p></div><p style='text-align:center;max-width:700px;margin:0 auto 20px auto;font-size:1em;color:#4A5568;'>KeyLock encrypts data (AES-256-GCM), hides it in PNGs (LSB).  Use the decoded variables to update the system variables.</p>")
         gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Github: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet'>github.com/broadfield-dev/KeyLock-API-Wallet</p>")
         gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Decoder Module Github: <a href='https://github.com/broadfield-dev/keylock-decode'>github.com/broadfield-dev/keylock-decode</p>")
