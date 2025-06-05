@@ -178,6 +178,8 @@ def gradio_extract_data(stego_image_pil: Image.Image, password: str):
 def build_interface():
     with gr.Blocks(theme=light_theme, title="KeyLock Secure Steganography") as keylock_app_interface:
         gr.Markdown("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock</span><h2 style='font-size:1.2em;color:#4A5568;margin-top:5px;'>Portable API key wallet in a PNG image</h2><p>Securely Embed & Extract API [KEY : Value] pairs in PNG Images</p></div><p style='text-align:center;max-width:700px;margin:0 auto 20px auto;font-size:1em;color:#4A5568;'>KeyLock encrypts data (AES-256-GCM), hides it in PNGs (LSB).  Use the decoded variables to update the system variables.</p>")
+        gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>Github: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet'>github.com/broadfield-dev/KeyLock-API-Wallet</p>")
+        gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>Decoder Module Github: <a href='https://github.com/broadfield-dev/keylock-decode'>github.com/broadfield-dev/keylock-decode</p>")
         gr.HTML("<hr style='margin-bottom:25px;'>")
 
         with gr.Tabs():
