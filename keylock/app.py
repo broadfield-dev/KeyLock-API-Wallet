@@ -9,7 +9,7 @@ import traceback
 import base64
 import io
 
-from . import core  # Use relative import for core module
+from . import core # Use relative import for core module
 from . import __version__ # Import version for footer
 
 app_logger = logging.getLogger("keylock_app")
@@ -20,7 +20,7 @@ if not app_logger.hasHandlers(): # Basic logging setup if not configured elsewhe
     app_logger.addHandler(handler)
     app_logger.setLevel(logging.INFO)
 
-# Theming (remains as per your Gradio 3.x compatible code)
+# Theming
 try:
     font_family = [gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"]
 except AttributeError: 
@@ -42,10 +42,6 @@ except AttributeError:
     slate_color = FallbackColors.slate
     cyan_color = FallbackColors.cyan
     neutral_color = FallbackColors.neutral
-
-
-
-
 
 ICON_EMBED = "➕"
 ICON_EXTRACT = "➖"
@@ -71,7 +67,6 @@ def gradio_embed_data(kv_string: str, password: str,
             carrier_img = core.generate_keylock_carrier_image()
         else:
             carrier_img = input_image_pil.copy()
-            # Check format of uploaded image
             if hasattr(input_image_pil, 'format') and input_image_pil.format and input_image_pil.format.upper() != 'PNG':
                 original_format_note = (
                     f"Input carrier image was format '{input_image_pil.format}'. "
@@ -82,7 +77,7 @@ def gradio_embed_data(kv_string: str, password: str,
                     f"if it had transparency (e.g., GIF), it will be lost during RGB conversion."
                 )
         
-        carrier_img = carrier_img.convert("RGB") # Ensure RGB for LSB and overlay consistency
+        carrier_img = carrier_img.convert("RGB") 
         
         keys_for_overlay = list(data_dict.keys()) if show_keys_on_image_flag else None
         overlay_title = "KeyLock: Data Embedded"
@@ -142,227 +137,247 @@ def gradio_extract_data(stego_image_pil: Image.Image, password: str):
 
 def build_interface():
     custom_theme = gr.themes.Base(
-    primary_hue="teal", # Teal for primary actions
-    secondary_hue="purple", # Purple for secondary elements
-    neutral_hue="zinc", # Zinc for neutral/backgrounds (dark gray)
-    text_size="sm", # Smaller text size for a denser, professional look
-    spacing_size="md", # Medium spacing
-    radius_size="sm", # Small border radius
-    font=["System UI", "sans-serif"] # Use system font
-)
-custom_css = """
-body {
-  background: linear-gradient(to bottom right, #2c3e50, #34495e); /* Dark blue-gray gradient */
-  color: #ecf0f1; /* Light text color for dark background */
-}
-/* Adjust main Gradio container background to be transparent to see body gradient */
-.gradio-container {
-    background: transparent !important;
-}
-/* Adjust component backgrounds for contrast against the body gradient */
-.gr-box, .gr-panel, .gr-pill {
-    background-color: rgba(44, 62, 80, 0.8) !important; /* Slightly lighter transparent dark blue-gray */
-    border-color: rgba(189, 195, 199, 0.2) !important; /* Light border for contrast */
-}
-/* Adjust inputs, dropdowns, buttons etc. for visibility */
-.gr-textbox, .gr-dropdown, .gr-button, .gr-code, .gr-chat-message {
-    border-color: rgba(189, 195, 199, 0.3) !important;
-    background-color: rgba(52, 73, 94, 0.9) !important; /* Slightly different dark blue-gray */
-    color: #ecf0f1 !important; /* Ensure text is light */
-}
-.gr-button.gr-button-primary {
-    background-color: #1abc9c !important; /* Teal from primary_hue */
-    color: white !important;
-    border-color: #16a085 !important;
-}
-.gr-button.gr-button-secondary {
-     background-color: #9b59b6 !important; /* Purple from secondary_hue */
-     color: white !important;
-     border-color: #8e44ad !important;
-}
-.gr-button.gr-button-stop {
-    background-color: #e74c3c !important; /* Red for stop/delete */
-    color: white !important;
-    border-color: #c0392b !important;
-}
-/* Adjust markdown backgrounds */
-.gr-markdown {
-    background-color: rgba(44, 62, 80, 0.7) !important; /* Transparent dark background */
-    padding: 10px; /* Add some padding */
-    border-radius: 5px; /* Rounded corners */
-}
-/* Style markdown headers for better contrast */
-.gr-markdown h1, .gr-markdown h2, .gr-markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
-    color: #ecf0f1 !important; /* Ensure headers are light */
-    border-bottom-color: rgba(189, 195, 199, 0.3) !important; /* Light separator */
-}
-/* Style code blocks within markdown */
-.gr-markdown pre code {
-    background-color: rgba(52, 73, 94, 0.95) !important; /* Darker code background */
-    border-color: rgba(189, 195, 199, 0.3) !important;
-}
-/* Chatbot specific styling */
-.gr-chatbot {
-    background-color: rgba(44, 62, 80, 0.7) !important;
-    border-color: rgba(189, 195, 199, 0.2) !important;
-}
-.gr-chatbot .message {
-    background-color: rgba(52, 73, 94, 0.9) !important; /* Dark background for messages */
-    color: #ecf0f1 !important;
-    border-color: rgba(189, 195, 199, 0.3) !important;
-}
-.gr-chatbot .message.user {
-    background-color: rgba(46, 204, 113, 0.9) !important; /* Greenish background for user messages */
-    color: black !important; /* Dark text for green background */
-}"""
-with gr.Blocks(css=custom_css, title="KeyLock Secure Steganography") as keylock_app_interface:
-    gr.Markdown("<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock</span><h2 style='font-size:1.2em;color:#4A5568;margin-top:5px;'>Portable API key wallet in a PNG image</h2><p>Securely Embed & Extract API [KEY : Value] pairs in PNG Images</p></div><p style='text-align:center;max-width:700px;margin:0 auto 20px auto;font-size:1em;color:#4A5568;'>KeyLock encrypts data (AES-256-GCM), hides it in PNGs (LSB).  Use the decoded variables to update the system variables.</p>")
-    gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Github: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet'>github.com/broadfield-dev/KeyLock-API-Wallet</p>")
-    gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Decoder Module Github: <a href='https://github.com/broadfield-dev/keylock-decode'>github.com/broadfield-dev/keylock-decode</p>")
-    gr.HTML("<hr style='margin-bottom:25px;'>")
+        primary_hue="teal",
+        secondary_hue="purple",
+        neutral_hue="zinc",
+        text_size="sm",
+        spacing_size="md",
+        radius_size="sm",
+        font=["System UI", "sans-serif"]
+    )
+    custom_css = """
+    body {
+      background: linear-gradient(to bottom right, #2c3e50, #34495e); 
+      color: #ecf0f1; 
+    }
+    .gradio-container {
+        background: transparent !important;
+    }
+    .gr-box, .gr-panel, .gr-pill {
+        background-color: rgba(44, 62, 80, 0.8) !important; 
+        border-color: rgba(189, 195, 199, 0.2) !important; 
+    }
+    .gr-textbox, .gr-dropdown, .gr-button, .gr-code, .gr-chat-message, .gr-image {
+        border-color: rgba(189, 195, 199, 0.3) !important;
+        background-color: rgba(52, 73, 94, 0.9) !important; 
+        color: #ecf0f1 !important; 
+    }
+    .gr-button.gr-button-primary {
+        background-color: #1abc9c !important; 
+        color: white !important;
+        border-color: #16a085 !important;
+    }
+    .gr-button.gr-button-secondary {
+         background-color: #9b59b6 !important; 
+         color: white !important;
+         border-color: #8e44ad !important;
+    }
+    .gr-button.gr-button-stop {
+        background-color: #e74c3c !important; 
+        color: white !important;
+        border-color: #c0392b !important;
+    }
+    .gr-markdown {
+        background-color: rgba(44, 62, 80, 0.7) !important; 
+        padding: 10px; 
+        border-radius: 5px; 
+    }
+    .gr-markdown h1, .gr-markdown h2, .gr-markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
+        color: #ecf0f1 !important; 
+        border-bottom-color: rgba(189, 195, 199, 0.3) !important; 
+    }
+    .gr-markdown pre code {
+        background-color: rgba(52, 73, 94, 0.95) !important; 
+        border-color: rgba(189, 195, 199, 0.3) !important;
+    }
+    .gr-image div img { /* Style for image preview */
+        border: 1px solid #ccc;
+        background-color: rgba(52, 73, 94, 0.9) !important;
+    }
+    .gr-file div button { /* Style for file download button */
+        background-color: #1abc9c !important;
+        color: white !important;
+        border: 1px solid #16a085 !important;
+    }
+    """
+    with gr.Blocks(theme=custom_theme, css=custom_css, title=f"KeyLock Steganography v{__version__}") as keylock_app_interface:
+        gr.Markdown(f"<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock v{__version__}</span><h2 style='font-size:1.2em;color:#bdc3c7;margin-top:5px;'>Portable API Key Wallet in a PNG</h2></div>")
+        gr.HTML("<div align='center' style='margin-bottom:10px;font-size:0.9em;color:#bdc3c7;'>Securely embed and extract API key-value pairs (or any text) within PNG images using LSB steganography and AES-256-GCM encryption.</div>")
+        gr.HTML("<div align='center' style='margin-bottom:15px;font-size:0.9em;'><span style='font-weight:bold;'>GitHub: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet' target='_blank' style='color:#1abc9c;'>KeyLock-API-Wallet</a> | Decoder Module: <a href='https://github.com/broadfield-dev/keylock-decode' target='_blank' style='color:#1abc9c;'>keylock-decode</a></span></div>")
+        gr.HTML("<hr style='border-color: rgba(189, 195, 199, 0.2); margin-bottom:25px;'>")
 
-    # --- Main Application Tabs ---
-    with gr.Tabs():
-        with gr.TabItem("🚀 Create New Space"):
-            # (Create Space UI Unchanged)
-            with gr.Row():
-                space_name_create_input = gr.Textbox(label="Space Name", placeholder="my-awesome-app (no slashes)", scale=2)
-                owner_create_input = gr.Textbox(label="Owner Username/Org", placeholder="Leave blank for your HF username", scale=1)
-            sdk_create_input = gr.Dropdown(label="Space SDK", choices=["gradio", "streamlit", "docker", "static"], value="gradio")
-            gr.Markdown("### Example Source: [/spaces/broadfield-dev/repo_to_md](https://huggingface.co/spaces/broadfield-dev/repo_to_md)")
-            markdown_input_create = gr.Textbox(label="Markdown File Structure & Content", placeholder="Example:\n### File: app.py\n# ```python\nprint(\"Hello\")\n# ```", lines=15, interactive=True)
-            create_btn = gr.Button("Create Space", variant="primary")
-            create_output_md = gr.Markdown(label="Result")
-            create_btn.click(create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
+        with gr.Tabs():
+            with gr.TabItem(f"{ICON_EMBED} Embed Data"):
+                with gr.Row():
+                    with gr.Column(scale=2):
+                        embed_kv_input = gr.Textbox(
+                            label="Secret Data (Key:Value Pairs, one per line)",
+                            placeholder="API_KEY_1: your_secret_value_1\nSERVICE_USER = 'user@example.com'\n# Lines starting with # are ignored",
+                            lines=7,
+                            info="Enter secrets as Key:Value or Key=Value. Each pair on a new line."
+                        )
+                        embed_password_input = gr.Textbox(
+                            label="Encryption Password",
+                            type="password",
+                            placeholder="Enter a strong password",
+                            info="Required to encrypt data. Keep this safe!"
+                        )
+                        embed_output_filename_base = gr.Textbox(
+                            label="Base Name for Downloaded Stego Image",
+                            value="keylock_wallet",
+                            info="'.png' will be appended. e.g., 'my_project_secrets'"
+                        )
+                        with gr.Accordion("Carrier Image Options", open=False):
+                            embed_generate_carrier_checkbox = gr.Checkbox(
+                                label="Generate new KeyLock Wallet image",
+                                value=True,
+                                info="Uncheck to upload your own PNG carrier image."
+                            )
+                            embed_input_image_upload = gr.Image(
+                                label="Upload Your Own PNG Carrier (Optional)",
+                                type="pil",
+                                image_mode="RGB",
+                                sources=["upload"],
+                                visible=False, # Initially hidden
+                                show_download_button=False,
+                                interactive=True
+                            )
+                        embed_show_keys_checkbox = gr.Checkbox(
+                            label="Show list of key names on image overlay",
+                            value=True,
+                            info="Displays embedded key names (not values) on the image."
+                        )
+                        embed_button = gr.Button("Embed Secrets "+ICON_EMBED, variant="primary")
 
+                    with gr.Column(scale=3):
+                        gr.Markdown("### Output Image & Status")
+                        embed_output_status = gr.Textbox(
+                            label="Embedding Status",
+                            lines=4,
+                            interactive=False,
+                            placeholder="Status messages will appear here..."
+                        )
+                        embed_output_image_html = gr.HTML(
+                            label="Preview of Stego Image (Max 480px width)",
+                            value="<div style='text-align:center; color:#bdc3c7; padding:20px;'>Image preview will appear here after embedding.</div>"
+                        )
+                        embed_download_file = gr.File(
+                            label="Download Your KeyLock Image (PNG)",
+                            interactive=False,
+                            file_count="single"
+                        )
+                
+                def toggle_carrier_upload(generate_flag):
+                    return gr.update(visible=not generate_flag)
 
-        # --- "Browse & Edit Files" Tab (Hub-based) ---
-        with gr.TabItem("📂 Browse & Edit Space Files"):
-            gr.Markdown("Browse, view, and edit files directly on a Hugging Face Space.")
-            with gr.Row():
-                browse_space_name_input = gr.Textbox(label="Space Name", placeholder="my-target-app", scale=2)
-                browse_owner_input = gr.Textbox(label="Owner Username/Org", placeholder="Leave blank if it's your space", scale=1)
+                embed_generate_carrier_checkbox.change(
+                    fn=toggle_carrier_upload,
+                    inputs=[embed_generate_carrier_checkbox],
+                    outputs=[embed_input_image_upload]
+                )
+                embed_button.click(
+                    fn=gradio_embed_data,
+                    inputs=[
+                        embed_kv_input,
+                        embed_password_input,
+                        embed_input_image_upload,
+                        embed_generate_carrier_checkbox,
+                        embed_show_keys_checkbox,
+                        embed_output_filename_base
+                    ],
+                    outputs=[
+                        embed_output_image_html,
+                        embed_output_status,
+                        embed_download_file
+                    ]
+                )
 
-            browse_load_files_button = gr.Button("Load Files List from Space", variant="secondary")
-            browse_status_output = gr.Markdown(label="File List Status")
+            with gr.TabItem(f"{ICON_EXTRACT} Extract Data"):
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        extract_stego_image_upload = gr.Image(
+                            label="Upload KeyLock PNG Image",
+                            type="pil",
+                            image_mode="RGB",
+                            sources=["upload"],
+                            show_download_button=False,
+                            interactive=True,
+                            info="Upload the PNG image containing KeyLock data."
+                        )
+                        extract_password_input = gr.Textbox(
+                            label="Decryption Password",
+                            type="password",
+                            placeholder="Enter the password used during embedding",
+                            info="Required to decrypt and extract data."
+                        )
+                        extract_button = gr.Button("Extract Secrets "+ICON_EXTRACT, variant="primary")
+                    
+                    with gr.Column(scale=2):
+                        gr.Markdown("### Extracted Data & Status")
+                        extract_output_status = gr.Textbox(
+                            label="Extraction Status",
+                            lines=2,
+                            interactive=False,
+                            placeholder="Status messages will appear here..."
+                        )
+                        extract_output_data = gr.Textbox(
+                            label="Extracted Secret Data",
+                            lines=10,
+                            interactive=False,
+                            placeholder="Extracted data (usually JSON) will appear here...",
+                            show_copy_button=True
+                        )
+                
+                extract_button.click(
+                    fn=gradio_extract_data,
+                    inputs=[
+                        extract_stego_image_upload,
+                        extract_password_input
+                    ],
+                    outputs=[
+                        extract_output_data,
+                        extract_output_status
+                    ]
+                )
+        
+        gr.Markdown("<hr style='border-color: rgba(189, 195, 199, 0.1); margin-top: 30px; margin-bottom:10px;'>")
+        gr.Markdown(f"<div style='text-align:center; font-size:0.8em; color:#7f8c8d;'>KeyLock-API-Wallet v{__version__}. Use responsibly.</div>")
 
-            gr.Markdown("---")
-            gr.Markdown("### Select File to View/Edit")
-            # Using Radio for file list. Could be Dropdown for many files.
-            # `choices` will be updated dynamically.
-            file_selector_radio = gr.Radio(
-                label="Files in Space",
-                choices=[],
-                interactive=True,
-                info="Select a file to load its content below."
-            )
-
-            gr.Markdown("---")
-            gr.Markdown("### File Editor")
-            file_editor_textbox = gr.Textbox(
-                label="File Content (Editable)", lines=20, interactive=True,
-                placeholder="Select a file from the list above to view/edit its content."
-            )
-            edit_commit_message_input = gr.Textbox(label="Commit Message for Update", placeholder="e.g., Update app.py content")
-            update_edited_file_button = gr.Button("Update File in Space", variant="primary")
-            edit_update_status_output = gr.Markdown(label="File Update Result")
-
-            # --- Event Handlers for Browse & Edit Tab (Hub-based) ---
-            def handle_load_space_files_list(token_from_ui, space_name, owner_name):
-                if not space_name:
-                    return {
-                        browse_status_output: gr.Markdown("Error: Space Name cannot be empty."),
-                        file_selector_radio: gr.Radio(choices=[], value=None, label="Files in Space"), # Clear radio, reset label
-                        file_editor_textbox: gr.Textbox(value=""), # Clear editor
-                    }
-
-                files_list, error_msg = list_space_files_for_browsing(token_from_ui, space_name, owner_name)
-
-                if error_msg and files_list is None: # Indicates a hard error
-                    return {
-                        browse_status_output: gr.Markdown(f"Error: {error_msg}"),
-                        file_selector_radio: gr.Radio(choices=[], value=None, label="Files in Space"),
-                        file_editor_textbox: gr.Textbox(value=""),
-                    }
-                if error_msg and not files_list: # Info message like "no files found"
-                     return {
-                        browse_status_output: gr.Markdown(error_msg), # Show "No files found"
-                        file_selector_radio: gr.Radio(choices=[], value=None, label=f"Files in {owner_name}/{space_name}"), # Update label even if empty
-                        file_editor_textbox: gr.Textbox(value=""),
-                    }
-
-                return {
-                    browse_status_output: gr.Markdown(f"Files loaded for '{owner_name}/{space_name}'. Select a file to edit."),
-                    file_selector_radio: gr.Radio(choices=files_list, value=None, label=f"Files in {owner_name}/{space_name}"),
-                    file_editor_textbox: gr.Textbox(value=""), # Clear editor on new list load
-                }
-
-            browse_load_files_button.click(
-                fn=handle_load_space_files_list,
-                inputs=[api_token_ui_input, browse_space_name_input, browse_owner_input],
-                outputs=[browse_status_output, file_selector_radio, file_editor_textbox]
-            )
-
-            def handle_file_selected_for_editing(token_from_ui, space_name, owner_name, selected_filepath_evt: gr.SelectData):
-                if not selected_filepath_evt or not selected_filepath_evt.value:
-                    # This might happen if the radio is cleared or has no selection
-                    return {
-                        file_editor_textbox: gr.Textbox(value=""),
-                        browse_status_output: gr.Markdown("No file selected or selection cleared.")
-                    }
-
-                selected_filepath = selected_filepath_evt.value # The value of the selected radio button
-
-                if not space_name: # Should not happen if file list is populated
-                    return {
-                        file_editor_textbox: gr.Textbox(value="Error: Space name is missing."),
-                        browse_status_output: gr.Markdown("Error: Space context lost. Please reload file list.")
-                    }
-
-                content, error_msg = get_space_file_content(token_from_ui, space_name, owner_name, selected_filepath)
-
-                if error_msg:
-                    return {
-                        file_editor_textbox: gr.Textbox(value=f"Error loading file content: {error_msg}"),
-                        browse_status_output: gr.Markdown(f"Failed to load '{selected_filepath}': {error_msg}")
-                    }
-
-                return {
-                    file_editor_textbox: gr.Textbox(value=content),
-                    browse_status_output: gr.Markdown(f"Content loaded for: {selected_filepath}")
-                }
-
-            # Use .select event for gr.Radio
-            file_selector_radio.select(
-                fn=handle_file_selected_for_editing,
-                inputs=[api_token_ui_input, browse_space_name_input, browse_owner_input], # Pass space context again
-                outputs=[file_editor_textbox, browse_status_output]
-            )
-
-            update_edited_file_button.click(
-                fn=update_space_file,
-                inputs=[
-                    api_token_ui_input,
-                    browse_space_name_input,
-                    browse_owner_input,
-                    file_selector_radio, # Pass the selected file path from the radio
-                    file_editor_textbox,
-                    edit_commit_message_input
-                ],
-                outputs=[edit_update_status_output]
-            )    
-
+    return keylock_app_interface
 
 def main():
-    app_logger.info("Starting KeyLock Gradio Application...")
+    app_logger.info(f"Starting KeyLock Gradio Application v{__version__}...")
     try:
-        ImageFont.truetype("arial.ttf" if os.name == 'nt' else "DejaVuSans.ttf", 10)
-        app_logger.info("System font (Arial/DejaVuSans) likely available for PIL.")
+        # Attempt to load a common font to check PIL/Pillow font handling
+        ImageFont.truetype("DejaVuSans.ttf", 10) # Common on Linux
+        app_logger.info("DejaVuSans font found, PIL font rendering should be good.")
     except IOError:
-        app_logger.warning("Common system font (Arial/DejaVuSans) not found. PIL might use basic bitmap font if other preferred fonts in core.py are also unavailable.")
+        try:
+            ImageFont.truetype("arial.ttf", 10) # Common on Windows
+            app_logger.info("Arial font found, PIL font rendering should be good.")
+        except IOError:
+            app_logger.warning("Common system fonts (DejaVuSans/Arial) not found. PIL might use basic bitmap font if other preferred fonts in core.py are also unavailable. Overlay text quality might be affected.")
     
     keylock_app_interface = build_interface()
-    keylock_app_interface.launch(allowed_paths=[tempfile.gettempdir()])
+    
+    # Prepare launch arguments
+    launch_args = {"allowed_paths": [tempfile.gettempdir()]}
+    
+    server_name = os.environ.get('GRADIO_SERVER_NAME')
+    server_port = os.environ.get('GRADIO_SERVER_PORT')
+
+    if server_name:
+        launch_args["server_name"] = server_name
+        app_logger.info(f"Using server_name from environment: {server_name}")
+    if server_port:
+        try:
+            launch_args["server_port"] = int(server_port)
+            app_logger.info(f"Using server_port from environment: {server_port}")
+        except ValueError:
+            app_logger.warning(f"Invalid GRADIO_SERVER_PORT: {server_port}. Using default.")
+            
+
+    keylock_app_interface.launch(**launch_args)
 
 if __name__ == "__main__":
     main()
