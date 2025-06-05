@@ -351,7 +351,7 @@ with gr.Blocks(theme=custom_theme, css=custom_css, title="KeyLock Secure Stegano
                 ],
                 outputs=[edit_update_status_output]
             )    
-return demo
+
 
 def main():
     app_logger.info("Starting KeyLock Gradio Application...")
