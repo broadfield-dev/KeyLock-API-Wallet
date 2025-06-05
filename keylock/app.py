@@ -182,52 +182,137 @@ def build_interface():
         gr.HTML("<div align='center' style='margin-bottom:15px;'><span style='font-size:1em;font-weight:bold;'>Decoder Module Github: <a href='https://github.com/broadfield-dev/keylock-decode'>github.com/broadfield-dev/keylock-decode</p>")
         gr.HTML("<hr style='margin-bottom:25px;'>")
 
-        with gr.Tabs():
-            with gr.TabItem(f"{ICON_EMBED} Embed Data"):
-                with gr.Row(equal_height=False):
-                    with gr.Column(scale=2, min_width=350):
-                        kv_input = gr.Textbox(label="Secret Data (Key:Value Pairs)",placeholder="API_KEY:value\nDB_PASS=secret",info="One per line. Separators: ':' or '='.",lines=8)
-                        password_embed = gr.Textbox(label="Encryption Password",type="password",placeholder="Strong, unique password",info="Crucial for securing/retrieving data.")
-                        gr.Markdown("<h3 style='margin-bottom:8px;'>Carrier Image</h3>")
-                        generate_carrier_cb = gr.Checkbox(label="Generate new KeyLock Wallet image",value=True)
-                        # MODIFIED LABEL HERE:
-                        input_carrier_img = gr.Image(label="Or Upload Your Own (PNG recommended, other formats converted)",type="pil",sources=["upload","clipboard"],visible=False)
-                        gr.Markdown("<h3 style='margin-bottom:8px;'>Visual Markings (Top-Right)</h3>")
-                        show_keys_cb = gr.Checkbox(label=f"Show list of key names (up to {core.MAX_KEYS_TO_DISPLAY_OVERLAY})",value=True,info="If shown, appears below the 'Data Embedded' title. Max width ~30% of image.")
-                        gr.Markdown("<p style='font-size:0.9em;margin-bottom:5px;'>A 'KeyLock: Data Embedded' title bar will always be present above the optional key list.</p>")
-                        gr.Markdown("<h3 style='margin-bottom:8px;'>Output</h3>")
-                        output_fname_base = gr.Textbox(label="Base Name for Downloaded Stego Image",value="keylock_secure_image",info="E.g., my_secrets.png.")
-                        embed_btn = gr.Button(f"Embed Secrets {ICON_EMBED}",variant="primary")
-                    with gr.Column(scale=3, min_width=450):
-                        output_stego_html = gr.HTML(label="Final Stego Image Preview")
-                        download_stego_file = gr.File(label="Download Your KeyLock Image (PNG)",interactive=False) 
-                        status_embed = gr.Textbox(label="Embedding Process Status",interactive=False,lines=7,show_copy_button=True)
-                generate_carrier_cb.change(lambda gen:gr.update(visible=not gen),generate_carrier_cb,input_carrier_img)
-            
-            with gr.TabItem(f"{ICON_EXTRACT} Extract Data"):
-                with gr.Row(equal_height=False):
-                    with gr.Column(scale=2, min_width=350):
-                        input_stego_extract = gr.Image(
-                            label="Upload KeyLock Stego Image (Unmodified PNG from download)",
-                            type="pil",
-                            sources=["upload","clipboard"] 
-                        )
-                        password_extract = gr.Textbox(label="Decryption Password",type="password",placeholder="Password used during embedding",info="Must match exactly.")
-                        extract_btn = gr.Button(f"Extract Secrets {ICON_EXTRACT}",variant="primary")
-                    with gr.Column(scale=3, min_width=450):
-                        extracted_data_disp = gr.Textbox(label="Extracted Secret Data (JSON or Raw)",lines=10,interactive=False,show_copy_button=True)
-                        status_extract = gr.Textbox(label="Extraction Process Status",interactive=False,lines=4,show_copy_button=True)
+    # --- Main Application Tabs ---
+    with gr.Tabs():
+        with gr.TabItem("🚀 Create New Space"):
+            # (Create Space UI Unchanged)
+            with gr.Row():
+                space_name_create_input = gr.Textbox(label="Space Name", placeholder="my-awesome-app (no slashes)", scale=2)
+                owner_create_input = gr.Textbox(label="Owner Username/Org", placeholder="Leave blank for your HF username", scale=1)
+            sdk_create_input = gr.Dropdown(label="Space SDK", choices=["gradio", "streamlit", "docker", "static"], value="gradio")
+            gr.Markdown("### Example Source: [/spaces/broadfield-dev/repo_to_md](https://huggingface.co/spaces/broadfield-dev/repo_to_md)")
+            markdown_input_create = gr.Textbox(label="Markdown File Structure & Content", placeholder="Example:\n### File: app.py\n# ```python\nprint(\"Hello\")\n# ```", lines=15, interactive=True)
+            create_btn = gr.Button("Create Space", variant="primary")
+            create_output_md = gr.Markdown(label="Result")
+            create_btn.click(create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
 
-        embed_btn.click(gradio_embed_data,
-            [kv_input,password_embed,input_carrier_img,generate_carrier_cb,show_keys_cb,output_fname_base],
-            [output_stego_html,status_embed,download_stego_file])
-        extract_btn.click(gradio_extract_data,
-            [input_stego_extract,password_extract],
-            [extracted_data_disp,status_extract])
-        
-        gr.Markdown("""---<div style="max-width:750px;margin:15px auto;font-size:0.95em;"><h3 style='margin-bottom:10px;text-align:left;'>Important Notes:</h3><ul style="padding-left:20px;text-align:left;line-height:1.6;"><li><strong>Use Downloaded PNG for Extraction:</strong> Copy-pasting images from browser can corrupt LSB data. Always use the downloaded file.</li><li><strong>PNG Format is Crucial:</strong> Non-PNG or re-compressed images will likely lose data. KeyLock will attempt to convert uploaded non-PNG carriers to PNG.</li><li><strong>Password Security:</strong> Use strong, unique passwords. Lost passwords mean lost data.</li><li><strong>Data Capacity:</strong> The amount of data depends on image size. The visual overlay slightly reduces capacity by modifying some pixels before LSB encoding.</li></ul></div>""")
-        gr.HTML(f"<div style='text-align:center;margin-top:20px;font-size:0.9em;color:#777;'>KeyLock API Key Wallet | v{__version__}</div>")
-    return keylock_app_interface
+
+        # --- "Browse & Edit Files" Tab (Hub-based) ---
+        with gr.TabItem("📂 Browse & Edit Space Files"):
+            gr.Markdown("Browse, view, and edit files directly on a Hugging Face Space.")
+            with gr.Row():
+                browse_space_name_input = gr.Textbox(label="Space Name", placeholder="my-target-app", scale=2)
+                browse_owner_input = gr.Textbox(label="Owner Username/Org", placeholder="Leave blank if it's your space", scale=1)
+
+            browse_load_files_button = gr.Button("Load Files List from Space", variant="secondary")
+            browse_status_output = gr.Markdown(label="File List Status")
+
+            gr.Markdown("---")
+            gr.Markdown("### Select File to View/Edit")
+            # Using Radio for file list. Could be Dropdown for many files.
+            # `choices` will be updated dynamically.
+            file_selector_radio = gr.Radio(
+                label="Files in Space",
+                choices=[],
+                interactive=True,
+                info="Select a file to load its content below."
+            )
+
+            gr.Markdown("---")
+            gr.Markdown("### File Editor")
+            file_editor_textbox = gr.Textbox(
+                label="File Content (Editable)", lines=20, interactive=True,
+                placeholder="Select a file from the list above to view/edit its content."
+            )
+            edit_commit_message_input = gr.Textbox(label="Commit Message for Update", placeholder="e.g., Update app.py content")
+            update_edited_file_button = gr.Button("Update File in Space", variant="primary")
+            edit_update_status_output = gr.Markdown(label="File Update Result")
+
+            # --- Event Handlers for Browse & Edit Tab (Hub-based) ---
+            def handle_load_space_files_list(token_from_ui, space_name, owner_name):
+                if not space_name:
+                    return {
+                        browse_status_output: gr.Markdown("Error: Space Name cannot be empty."),
+                        file_selector_radio: gr.Radio(choices=[], value=None, label="Files in Space"), # Clear radio, reset label
+                        file_editor_textbox: gr.Textbox(value=""), # Clear editor
+                    }
+
+                files_list, error_msg = list_space_files_for_browsing(token_from_ui, space_name, owner_name)
+
+                if error_msg and files_list is None: # Indicates a hard error
+                    return {
+                        browse_status_output: gr.Markdown(f"Error: {error_msg}"),
+                        file_selector_radio: gr.Radio(choices=[], value=None, label="Files in Space"),
+                        file_editor_textbox: gr.Textbox(value=""),
+                    }
+                if error_msg and not files_list: # Info message like "no files found"
+                     return {
+                        browse_status_output: gr.Markdown(error_msg), # Show "No files found"
+                        file_selector_radio: gr.Radio(choices=[], value=None, label=f"Files in {owner_name}/{space_name}"), # Update label even if empty
+                        file_editor_textbox: gr.Textbox(value=""),
+                    }
+
+                return {
+                    browse_status_output: gr.Markdown(f"Files loaded for '{owner_name}/{space_name}'. Select a file to edit."),
+                    file_selector_radio: gr.Radio(choices=files_list, value=None, label=f"Files in {owner_name}/{space_name}"),
+                    file_editor_textbox: gr.Textbox(value=""), # Clear editor on new list load
+                }
+
+            browse_load_files_button.click(
+                fn=handle_load_space_files_list,
+                inputs=[api_token_ui_input, browse_space_name_input, browse_owner_input],
+                outputs=[browse_status_output, file_selector_radio, file_editor_textbox]
+            )
+
+            def handle_file_selected_for_editing(token_from_ui, space_name, owner_name, selected_filepath_evt: gr.SelectData):
+                if not selected_filepath_evt or not selected_filepath_evt.value:
+                    # This might happen if the radio is cleared or has no selection
+                    return {
+                        file_editor_textbox: gr.Textbox(value=""),
+                        browse_status_output: gr.Markdown("No file selected or selection cleared.")
+                    }
+
+                selected_filepath = selected_filepath_evt.value # The value of the selected radio button
+
+                if not space_name: # Should not happen if file list is populated
+                    return {
+                        file_editor_textbox: gr.Textbox(value="Error: Space name is missing."),
+                        browse_status_output: gr.Markdown("Error: Space context lost. Please reload file list.")
+                    }
+
+                content, error_msg = get_space_file_content(token_from_ui, space_name, owner_name, selected_filepath)
+
+                if error_msg:
+                    return {
+                        file_editor_textbox: gr.Textbox(value=f"Error loading file content: {error_msg}"),
+                        browse_status_output: gr.Markdown(f"Failed to load '{selected_filepath}': {error_msg}")
+                    }
+
+                return {
+                    file_editor_textbox: gr.Textbox(value=content),
+                    browse_status_output: gr.Markdown(f"Content loaded for: {selected_filepath}")
+                }
+
+            # Use .select event for gr.Radio
+            file_selector_radio.select(
+                fn=handle_file_selected_for_editing,
+                inputs=[api_token_ui_input, browse_space_name_input, browse_owner_input], # Pass space context again
+                outputs=[file_editor_textbox, browse_status_output]
+            )
+
+            update_edited_file_button.click(
+                fn=update_space_file,
+                inputs=[
+                    api_token_ui_input,
+                    browse_space_name_input,
+                    browse_owner_input,
+                    file_selector_radio, # Pass the selected file path from the radio
+                    file_editor_textbox,
+                    edit_commit_message_input
+                ],
+                outputs=[edit_update_status_output]
+            )
+return demo
 
 def main():
     app_logger.info("Starting KeyLock Gradio Application...")
