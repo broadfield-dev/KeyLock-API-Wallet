@@ -1,285 +1,251 @@
-# keylock/core.py
-import io
-import json
+import gradio as gr
 import os
-import struct
-import logging
-import traceback
-import base64
+import tempfile
+from PIL import ImageFont # Assuming this is from your original imports for font checking
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.exceptions import InvalidTag
+# --- Mockups for running standalone if needed ---
+class MockCore:
+    MAX_KEYS_TO_DISPLAY_OVERLAY = 5
+core = MockCore()
+__version__ = "1.2.0" # Example version
+ICON_EMBED = "📥"
+ICON_EXTRACT = "📤"
+# --- End Mockups ---
 
-from PIL import Image, ImageDraw, ImageFont
-import numpy as np
+# --- Define a Professional Theme ---
+# Color Palette:
+# Primary Blue: ~#2B6CB0 (Tailwind Blue 700)
+# Lighter Blue: ~#4299E1 (Tailwind Blue 500)
+# Background Grey: #F7FAFC (Tailwind Gray 50) or #EDF2F7 (Tailwind Gray 100)
+# Text Grey (Dark): #2D3748 (Tailwind Gray 800)
+# Text Grey (Medium): #4A5568 (Tailwind Gray 700)
+# Text Grey (Light): #718096 (Tailwind Gray 600)
+# Border Grey: #CBD5E0 (Tailwind Gray 400)
 
-logger = logging.getLogger(__name__)
-if not logger.hasHandlers():
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(module)s - %(lineno)d - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+professional_theme = gr.themes.Base(
+    font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
+    primary_hue=gr.themes.colors.blue, # Base hue for primary elements
+    secondary_hue=gr.themes.colors.sky, # Base hue for secondary (can be adjusted)
+    neutral_hue=gr.themes.colors.slate, # Base hue for neutral elements
+).set(
+    # Body & Background
+    body_background_fill="#EDF2F7",        # Very light grey background
+    body_text_color="#2D3748",             # Dark slate grey for main text
 
-SALT_SIZE = 16; NONCE_SIZE = 12; TAG_SIZE = 16; KEY_SIZE = 32
-PBKDF2_ITERATIONS = 390_000; LENGTH_HEADER_SIZE = 4
-PREFERRED_FONTS = ["Verdana", "Arial", "DejaVu Sans", "Calibri", "Helvetica", "Roboto-Regular", "sans-serif"]
-MAX_KEYS_TO_DISPLAY_OVERLAY = 12
+    # Blocks & Containers (like group, tabs, accordions)
+    block_background_fill="white",
+    block_border_width="1px",
+    block_border_color="#E2E8F0",          # Light grey border (Tailwind Gray 300)
+    block_label_background_fill="*primary_500", # Blue for block labels
+    block_label_text_color="white",
+    block_title_text_color="*neutral_700",
 
-def _get_font(preferred_fonts, base_size):
-    fp = None
-    # Ensure base_size is an integer for ImageFont.truetype
-    safe_base_size = int(base_size)
-    if safe_base_size <= 0: # Prevent errors with non-positive font sizes
-        safe_base_size = 10 # Default to a small positive size
+    # Buttons
+    button_primary_background_fill="*primary_600", # Main blue (e.g., #2B6CB0)
+    button_primary_background_fill_hover="*primary_700",
+    button_primary_text_color="white",
 
-    for n in preferred_fonts:
-        try: ImageFont.truetype(n.lower()+".ttf",10); fp=n.lower()+".ttf"; break
-        except IOError:
-            try: ImageFont.truetype(n,10); fp=n; break
-            except IOError: continue
-    if fp:
-        try: return ImageFont.truetype(fp, safe_base_size)
-        except IOError: logger.warning(f"Font '{fp}' load failed with size {safe_base_size}. Defaulting.")
-    try: # Try to load default with size if Pillow version supports it
-        return ImageFont.load_default(size=safe_base_size)
-    except TypeError: # Older Pillow doesn't support size for load_default
-        return ImageFont.load_default()
+    button_secondary_background_fill="*neutral_200", # Lighter grey
+    button_secondary_background_fill_hover="*neutral_300",
+    button_secondary_text_color="*neutral_700", # Darker grey text for secondary
+
+    # Inputs (Textbox, Dropdown, etc.)
+    input_background_fill="white",
+    input_border_color="#CBD5E0",          # Medium grey border
+    input_placeholder_color="#A0AEC0",      # Lighter grey for placeholder (Tailwind Gray 500)
+
+    # Slider, Checkbox, Radio
+    slider_color="*primary_500",
+    checkbox_label_background_fill_selected="*primary_600",
+    checkbox_label_text_color_selected="white",
+    checkbox_border_color_selected="*primary_600",
+
+    # Borders & Dividers
+    border_color_accent="*primary_300",
+    border_color_primary="#E2E8F0",        # Light grey for general borders
+
+    # Specific component overrides if needed
+    # e.g., tab_background_fill="transparent",
+    # tab_text_color_selected="*primary_600",
+    # tab_border_color_selected="*primary_600"
+    shadow_drop="rgba(0,0,0,0.05) 0px 1px 2px 0px", # Subtle shadow
+    shadow_drop_lg="rgba(0,0,0,0.1) 0px 10px 15px -3px, rgba(0,0,0,0.05) 0px 4px 6px -2px" # Softer large shadow
+)
+# --- End Theme Definition ---
 
 
-def set_pil_image_format_to_png(image:Image.Image)->Image.Image:
-    buf=io.BytesIO(); image.save(buf,format='PNG'); buf.seek(0)
-    reloaded=Image.open(buf); reloaded.format="PNG"; return reloaded
+def gradio_embed_data(*args): # Mock function
+    print("Mock: Embedding data...")
+    # Simulate output: HTML for preview, status message, and a dummy file path
+    dummy_html_preview = "<div style='padding:20px; border:1px solid #ccc; background:#f9f9f9; text-align:center;'>Embedded Image Preview Would Be Here</div>"
+    dummy_status = "Mock: Data embedded successfully. Visual markings applied."
+    # Create a dummy file for download testing
+    temp_dir = tempfile.gettempdir()
+    dummy_file_path = os.path.join(temp_dir, "mock_keylock_image.png")
+    with open(dummy_file_path, "w") as f:
+        f.write("This is a mock PNG file.")
+    return dummy_html_preview, dummy_status, gr.File(value=dummy_file_path, label="Download Your KeyLock Image (PNG)")
 
-def _derive_key(pw:str,salt:bytes)->bytes:
-    kdf=PBKDF2HMAC(algorithm=hashes.SHA256(),length=KEY_SIZE,salt=salt,iterations=PBKDF2_ITERATIONS)
-    return kdf.derive(pw.encode('utf-8'))
+def gradio_extract_data(*args): # Mock function
+    print("Mock: Extracting data...")
+    dummy_extracted_data = '{\n  "API_KEY": "mock_value",\n  "DB_PASS": "mock_secret"\n}'
+    dummy_status = "Mock: Data extracted successfully."
+    return dummy_extracted_data, dummy_status
 
-def encrypt_data(data:bytes,pw:str)->bytes:
-    s=os.urandom(SALT_SIZE);k=_derive_key(pw,s);a=AESGCM(k);n=os.urandom(NONCE_SIZE)
-    ct=a.encrypt(n,data,None); return s+n+ct
 
-def decrypt_data(payload:bytes,pw:str)->bytes:
-    ml=SALT_SIZE+NONCE_SIZE+TAG_SIZE;
-    if len(payload)<ml: raise ValueError("Payload too short.")
-    s,n,ct_tag=payload[:SALT_SIZE],payload[SALT_SIZE:SALT_SIZE+NONCE_SIZE],payload[SALT_SIZE+NONCE_SIZE:]
-    k=_derive_key(pw,s);a=AESGCM(k)
-    try: return a.decrypt(n,ct_tag,None)
-    except InvalidTag: raise ValueError("Decryption failed: Invalid password/corrupted data.")
-    except Exception as e: logger.error(f"Decrypt error: {e}",exc_info=True); raise
+def build_interface():
+    with gr.Blocks(theme=professional_theme, title="KeyLock Secure Steganography") as keylock_app_interface:
+        # --- Header Section ---
+        gr.Markdown(f"""
+        <div align='center' style='margin-bottom:20px; padding-top: 25px;'>
+            <span style='font-size:3em; font-weight:bold; color:#2B6CB0;'>🔑 KeyLock</span>
+            <h2 style='font-size:1.4em; color:#4A5568; margin-top:8px; font-weight:500;'>Portable API Key Wallet in a PNG Image</h2>
+            <p style='font-size:1.05em; color:#718096; margin-top:10px;'>Securely Embed & Extract API [KEY : Value] pairs in PNG Images</p>
+        </div>
+        <p style='text-align:center; max-width:750px; margin:0 auto 25px auto; font-size:1em; color:#4A5568; line-height:1.6;'>
+            KeyLock encrypts your sensitive data using AES-256-GCM and discreetly hides it within PNG images
+            via Least Significant Bit (LSB) steganography. Utilize the extracted variables to seamlessly update
+            system environment variables or integrate them directly into your applications.
+        </p>
+        """)
 
-def _d2b(d:bytes)->str: return ''.join(format(b,'08b') for b in d)
-def _b2B(b:str)->bytes:
-    if len(b)%8!=0: raise ValueError("Bits not multiple of 8.")
-    return bytes(int(b[i:i+8],2) for i in range(0,len(b),8))
+        # --- GitHub Links ---
+        gr.HTML("""
+        <div align='center' style='margin-bottom:20px; font-size:1em; display: flex; justify-content: center; gap: 20px;'>
+            <span style='font-weight:600; color:#4A5568;'>GitHub: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet' target='_blank' style='color:#2B6CB0; text-decoration:none;'>KeyLock-API-Wallet</a></span>
+            <span style='font-weight:600; color:#4A5568;'>Decoder Module: <a href='https://github.com/broadfield-dev/keylock-decode' target='_blank' style='color:#2B6CB0; text-decoration:none;'>keylock-decode</a></span>
+        </div>
+        """)
+        # Using Markdown for a themed horizontal rule
+        gr.Markdown("<hr style='border: none; border-top: 1px solid #CBD5E0; margin: 25px auto; max-width: 80%;'>")
 
-def embed_data_in_image(img_obj:Image.Image,data:bytes)->Image.Image:
-    img=img_obj.convert("RGB");px=np.array(img);fpx=px.ravel()
-    lb=struct.pack('>I',len(data));fp=lb+data;db=_d2b(fp);nb=len(db)
-    if nb>len(fpx): raise ValueError(f"Data too large: {nb} bits needed, {len(fpx)} available.")
-    for i in range(nb): fpx[i]=(fpx[i]&0xFE)|int(db[i])
-    spx=fpx.reshape(px.shape); return Image.fromarray(spx.astype(np.uint8),'RGB')
 
-def extract_data_from_image(img_obj:Image.Image)->bytes:
-    img=img_obj.convert("RGB");px=np.array(img);fpx=px.ravel()
-    hbc=LENGTH_HEADER_SIZE*8
-    if len(fpx)<hbc: raise ValueError("Image too small for header.")
-    lb="".join(str(fpx[i]&1) for i in range(hbc))
-    try: pl=struct.unpack('>I',_b2B(lb))[0]
-    except Exception as e: raise ValueError(f"Header decode error: {e}")
-    if pl==0: return b""
-    if pl>(len(fpx)-hbc)/8: raise ValueError("Header len corrupted or > capacity.")
-    tpb=pl*8; so=hbc; eo=so+tpb
-    if len(fpx)<eo: raise ValueError("Image truncated or header corrupted.")
-    pb="".join(str(fpx[i]&1) for i in range(so,eo)); return _b2B(pb)
+        with gr.Tabs() as tabs:
+            with gr.TabItem(f"{ICON_EMBED} Embed Data"):
+                with gr.Row(equal_height=False, variant='compact'): # variant='compact' might reduce some padding
+                    with gr.Column(scale=2, min_width=380):
+                        kv_input = gr.Textbox(
+                            label="Secret Data (Key:Value Pairs)",
+                            placeholder="API_KEY:value\nDB_PASS=secret",
+                            info="One per line. Separators: ':' or '='.",
+                            lines=8
+                        )
+                        password_embed = gr.Textbox(
+                            label="Encryption Password",
+                            type="password",
+                            placeholder="Strong, unique password",
+                            info="Crucial for securing/retrieving data."
+                        )
+                        gr.Markdown("<h3 style='font-size:1.1em; color:#2D3748; margin-bottom:8px; margin-top:20px;'>Carrier Image</h3>")
+                        generate_carrier_cb = gr.Checkbox(label="Generate new KeyLock Wallet image", value=True)
+                        input_carrier_img = gr.Image(
+                            label="Or Upload Your Own (PNG recommended)",
+                            type="pil",
+                            sources=["upload", "clipboard"],
+                            visible=False,
+                            # height=200, # Optional: constrain height
+                        )
+                        gr.Markdown("<h3 style='font-size:1.1em; color:#2D3748; margin-bottom:8px; margin-top:20px;'>Visual Markings (Top-Right)</h3>")
+                        show_keys_cb = gr.Checkbox(
+                            label=f"Show list of key names (up to {core.MAX_KEYS_TO_DISPLAY_OVERLAY})",
+                            value=True,
+                            info="If shown, appears below the 'Data Embedded' title. Max width ~30% of image."
+                        )
+                        gr.Markdown("<p style='font-size:0.9em; color:#718096; margin-bottom:5px;'>A 'KeyLock: Data Embedded' title bar will always be present above the optional key list.</p>")
 
-def parse_kv_string_to_dict(kv_str:str)->dict:
-    if not kv_str or not kv_str.strip(): return {}
-    dd={};
-    for ln,ol in enumerate(kv_str.splitlines(),1):
-        l=ol.strip()
-        if not l or l.startswith('#'): continue
-        lc=l.split('#',1)[0].strip();
-        if not lc: continue
-        p=lc.split('=',1) if '=' in lc else lc.split(':',1) if ':' in lc else []
-        if len(p)!=2: raise ValueError(f"L{ln}: Invalid format '{ol}'.")
-        k,v=p[0].strip(),p[1].strip()
-        if not k: raise ValueError(f"L{ln}: Empty key in '{ol}'.")
-        if len(v)>=2 and v[0]==v[-1] and v.startswith(("'",'"')): v=v[1:-1]
-        dd[k]=v
-    return dd
+                        gr.Markdown("<h3 style='font-size:1.1em; color:#2D3748; margin-bottom:8px; margin-top:20px;'>Output</h3>")
+                        output_fname_base = gr.Textbox(
+                            label="Base Name for Downloaded Stego Image",
+                            value="keylock_secure_image",
+                            info="E.g., my_secrets.png. '.png' will be added."
+                        )
+                        embed_btn = gr.Button(f"Embed Secrets {ICON_EMBED}", variant="primary", elem_id="embed_button") # Added elem_id for potential CSS
 
-def generate_keylock_carrier_image(w=800,h=600,msg="KeyLock Wallet")->Image.Image:
-    cs,ce=(30,40,50),(70,80,90);img=Image.new("RGB",(w,h),cs);draw=ImageDraw.Draw(img)
-    for y_ in range(h):
-        i=y_/float(h-1) if h>1 else .5;r_,g_,b_=(int(s_*(1-i)+e_*(i)) for s_,e_ in zip(cs,ce))
-        draw.line([(0,y_),(w,y_)],fill=(r_,g_,b_))
-    ib=min(w,h)//7;icx,icy=w//2,h//3;cr=ib//2;cb=[(icx-cr,icy-cr),(icx+cr,icy+cr)]
-    rw,rh=ib//4,ib//2;rty=icy+int(cr*.2);rb=[(icx-rw//2,rty),(icx+rw//2,rty+rh)]
-    kc,ko=(190,195,200),(120,125,130);ow=max(1,int(ib/30))
-    draw.ellipse(cb,fill=kc,outline=ko,width=ow);draw.rectangle(rb,fill=kc,outline=ko,width=ow)
-    fs=max(16,min(int(w/18),h//8));fnt=_get_font(PREFERRED_FONTS,fs)
-    tc=(225,230,235);sc=(max(0,s_-20) for s_ in cs);tx,ty=w/2,h*.68;so=max(1,int(fs/25))
-    try:draw.text((tx+so,ty+so),msg,font=fnt,fill=tuple(sc),anchor="mm");draw.text((tx,ty),msg,font=fnt,fill=tc,anchor="mm")
-    except AttributeError:
-        bbox=draw.textbbox((0,0),msg,font=fnt) if hasattr(draw,'textbbox') else (0,0)+draw.textsize(msg,font=fnt)
-        tw,th=bbox[2]-bbox[0],bbox[3]-bbox[1];ax,ay=(w-tw)/2,ty-(th/2)
-        draw.text((ax+so,ay+so),msg,font=fnt,fill=tuple(sc));draw.text((ax,ay),msg,font=fnt,fill=tc)
-    return img
+                    with gr.Column(scale=3, min_width=480):
+                        output_stego_html = gr.HTML(label="Final Stego Image Preview")
+                        download_stego_file = gr.File(label="Download Your KeyLock Image (PNG)", interactive=False)
+                        status_embed = gr.Textbox(
+                            label="Embedding Process Status",
+                            interactive=False,
+                            lines=7,
+                            show_copy_button=True
+                        )
 
-def _get_text_measurement(draw_obj, text_str, font_obj):
-    """Returns (width, height) of text using the best available Pillow method."""
-    if hasattr(draw_obj, 'textbbox'): # Pillow 8.0.0+
-        # textbbox an (x1, y1, x2, y2) bounding box for text drawn at (0,0)
-        # Some fonts can have negative y1 (descenders) or x1 (kerning)
-        try:
-            bbox = draw_obj.textbbox((0, 0), text_str, font=font_obj)
-            width = bbox[2] - bbox[0]
-            height = bbox[3] - bbox[1]
-            return width, height
-        except Exception: # Fallback if textbbox fails for some reason
-            pass 
-    
-    # Fallback for older Pillow or if textbbox failed
+                generate_carrier_cb.change(lambda gen: gr.update(visible=not gen), generate_carrier_cb, input_carrier_img)
+
+            with gr.TabItem(f"{ICON_EXTRACT} Extract Data"):
+                with gr.Row(equal_height=False, variant='compact'):
+                    with gr.Column(scale=2, min_width=380):
+                        input_stego_extract = gr.Image(
+                            label="Upload KeyLock Stego Image (Unmodified PNG)",
+                            type="pil",
+                            sources=["upload", "clipboard"],
+                            # height=300 # Optional: constrain height
+                        )
+                        password_extract = gr.Textbox(
+                            label="Decryption Password",
+                            type="password",
+                            placeholder="Password used during embedding",
+                            info="Must match exactly."
+                        )
+                        extract_btn = gr.Button(f"Extract Secrets {ICON_EXTRACT}", variant="primary", elem_id="extract_button") # Added elem_id
+
+                    with gr.Column(scale=3, min_width=480):
+                        extracted_data_disp = gr.Textbox(
+                            label="Extracted Secret Data (JSON or Raw)",
+                            lines=10,
+                            interactive=False,
+                            show_copy_button=True
+                        )
+                        status_extract = gr.Textbox(
+                            label="Extraction Process Status",
+                            interactive=False,
+                            lines=4,
+                            show_copy_button=True
+                        )
+
+        embed_btn.click(gradio_embed_data,
+            [kv_input, password_embed, input_carrier_img, generate_carrier_cb, show_keys_cb, output_fname_base],
+            [output_stego_html, status_embed, download_stego_file]
+        )
+        extract_btn.click(gradio_extract_data,
+            [input_stego_extract, password_extract],
+            [extracted_data_disp, status_extract]
+        )
+
+        # --- Important Notes Section ---
+        gr.Markdown("""
+        <div style="max-width:800px; margin:30px auto 15px auto; padding:20px; background-color: #FFFFFF; border-radius:8px; border: 1px solid #E2E8F0; box-shadow: rgba(0,0,0,0.05) 0px 1px 2px 0px;">
+            <h3 style='font-size:1.2em; color:#2D3748; margin-bottom:15px; text-align:left;'>Important Notes:</h3>
+            <ul style="padding-left:25px; text-align:left; line-height:1.7; color:#4A5568; font-size:0.95em;">
+                <li><strong>Use Downloaded PNG for Extraction:</strong> Copy-pasting images directly from a web browser can alter pixel data, potentially corrupting the embedded LSB information. Always use the originally downloaded file for reliable extraction.</li>
+                <li><strong>PNG Format is Crucial:</strong> KeyLock relies on the lossless nature of PNGs. Uploading non-PNG carriers will trigger an automatic conversion to PNG. Re-compressing or converting the stego-image to other formats (like JPEG) will likely result in data loss.</li>
+                <li><strong>Password Security:</strong> Employ strong, unique passwords for encryption. There is no password recovery mechanism; if a password is lost, the data embedded with it cannot be retrieved.</li>
+                <li><strong>Data Capacity:</strong> The maximum amount of data that can be embedded depends on the dimensions (width x height) of the carrier image. Enabling visual markings (title bar, key list) slightly reduces this capacity as some pixels are used for the overlay before LSB encoding.</li>
+            </ul>
+        </div>
+        """)
+
+        # --- Footer ---
+        gr.HTML(f"<div style='text-align:center; margin-top:30px; margin-bottom:20px; font-size:0.9em; color:#A0AEC0;'>KeyLock API Key Wallet | v{__version__}</div>")
+
+    return keylock_app_interface
+
+
+def main():
+    # app_logger.info("Starting KeyLock Gradio Application...") # Assuming you have app_logger
+    print("Starting KeyLock Gradio Application...")
     try:
-        if hasattr(font_obj, 'getsize'): # font.getsize() was common
-             width, height = font_obj.getsize(text_str)
-             return width, height
-        # draw.textsize() is older
-        width, height = draw_obj.textsize(text_str, font=font_obj)
-        return width, height
-    except AttributeError: # Very old PIL or unexpected font_obj
-        # Basic estimation if all else fails
-        try:
-            char_width_approx = font_obj.size * 0.6
-            char_height_approx = font_obj.size
-            return int(len(text_str) * char_width_approx), int(char_height_approx)
-        except: # Absolute fallback
-            return len(text_str) * 8, 10 
+        # Check for a common system font to give a hint about PIL's capabilities
+        ImageFont.truetype("arial.ttf" if os.name == 'nt' else "DejaVuSans.ttf", 10)
+        # app_logger.info("System font (Arial/DejaVuSans) likely available for PIL.")
+        print("System font (Arial/DejaVuSans) likely available for PIL.")
+    except IOError:
+        # app_logger.warning("Common system font (Arial/DejaVuSans) not found. PIL might use basic bitmap font if other preferred fonts in core.py are also unavailable.")
+        print("Common system font (Arial/DejaVuSans) not found. PIL might use basic bitmap font.")
 
+    keylock_app_interface = build_interface()
+    keylock_app_interface.launch(allowed_paths=[tempfile.gettempdir()]) # Add other paths if needed
 
-def draw_key_list_dropdown_overlay(image: Image.Image, keys: list[str] = None, title: str = "Data Embedded") -> Image.Image:
-    if not title and (keys is None or not keys):
-        return set_pil_image_format_to_png(image.copy())
-
-    img_overlayed = image.copy(); draw = ImageDraw.Draw(img_overlayed)
-    margin = 10; padding = {'title_x':10,'title_y':6,'key_x':10,'key_y':5}; line_spacing = 4
-    title_bg_color=(60,60,60); title_text_color=(230,230,90)
-    key_list_bg_color=(50,50,50); key_text_color=(210,210,210); ellipsis_color=(170,170,170)
-    
-    # --- Overlay Box Width Calculation (closer to original logic) ---
-    OVERLAY_TARGET_WIDTH_RATIO = 0.30
-    MIN_OVERLAY_WIDTH_PX = 180 
-    MAX_OVERLAY_WIDTH_PX = 500 
-
-    final_overlay_box_width = int(image.width * OVERLAY_TARGET_WIDTH_RATIO)
-    final_overlay_box_width = max(MIN_OVERLAY_WIDTH_PX, final_overlay_box_width)
-    final_overlay_box_width = min(MAX_OVERLAY_WIDTH_PX, final_overlay_box_width)
-    # Ensure it fits within image width considering margins
-    final_overlay_box_width = min(final_overlay_box_width, image.width - 2 * margin) 
-
-    # --- Font Size Calculations (closer to original logic) ---
-    TITLE_FONT_HEIGHT_RATIO = 0.030 
-    TITLE_FONT_OVERLAY_WIDTH_RATIO = 0.08 
-    MIN_TITLE_FONT_SIZE = 14
-    MAX_TITLE_FONT_SIZE = 28
-
-    title_font_size_from_h = int(image.height * TITLE_FONT_HEIGHT_RATIO)
-    title_font_size_from_w = int(final_overlay_box_width * TITLE_FONT_OVERLAY_WIDTH_RATIO)
-    title_font_size = min(title_font_size_from_h, title_font_size_from_w)
-    title_font_size = max(MIN_TITLE_FONT_SIZE, title_font_size)
-    title_font_size = min(MAX_TITLE_FONT_SIZE, title_font_size)
-    title_font = _get_font(PREFERRED_FONTS, title_font_size)
-
-    KEY_FONT_HEIGHT_RATIO = 0.025
-    KEY_FONT_OVERLAY_WIDTH_RATIO = 0.07
-    MIN_KEY_FONT_SIZE = 12
-    MAX_KEY_FONT_SIZE = 22
-
-    key_font_size_from_h = int(image.height * KEY_FONT_HEIGHT_RATIO)
-    key_font_size_from_w = int(final_overlay_box_width * KEY_FONT_OVERLAY_WIDTH_RATIO)
-    key_font_size = min(key_font_size_from_h, key_font_size_from_w)
-    key_font_size = max(MIN_KEY_FONT_SIZE, key_font_size)
-    key_font_size = min(MAX_KEY_FONT_SIZE, key_font_size)
-    key_font = _get_font(PREFERRED_FONTS, key_font_size)
-    
-    # --- Text Dimensions ---
-    actual_title_w, actual_title_h = _get_text_measurement(draw, title, title_font)
-
-    disp_keys, actual_key_text_widths, total_keys_render_h, key_line_heights = [],[],0,[]
-    if keys:
-        temp_disp_keys=keys[:MAX_KEYS_TO_DISPLAY_OVERLAY-1]+[f"... ({len(keys)-(MAX_KEYS_TO_DISPLAY_OVERLAY-1)} more)"] if len(keys)>MAX_KEYS_TO_DISPLAY_OVERLAY else keys
-        for kt in temp_disp_keys:
-            disp_keys.append(kt)
-            kw, kh = _get_text_measurement(draw, kt, key_font)
-            actual_key_text_widths.append(kw); key_line_heights.append(kh)
-            total_keys_render_h += kh
-        if len(disp_keys)>1: total_keys_render_h += line_spacing*(len(disp_keys)-1)
-    
-    # --- Title Bar Drawing (Top-Right) ---
-    title_bar_h = actual_title_h + 2 * padding['title_y']
-    title_bar_x1 = image.width - margin  # Right edge
-    title_bar_x0 = title_bar_x1 - final_overlay_box_width # Left edge using final_overlay_box_width
-    title_bar_y0 = margin # Top edge
-    title_bar_y1 = title_bar_y0 + title_bar_h # Bottom edge
-
-    draw.rectangle([(title_bar_x0,title_bar_y0),(title_bar_x1,title_bar_y1)],fill=title_bg_color)
-    
-    # Center title text horizontally in the title bar
-    available_width_for_title_text = final_overlay_box_width - 2 * padding['title_x']
-    if actual_title_w <= available_width_for_title_text:
-        title_text_draw_x = title_bar_x0 + padding['title_x'] + (available_width_for_title_text - actual_title_w) / 2
-    else: # If title is wider than available space (even after font adjustments), left-align
-        title_text_draw_x = title_bar_x0 + padding['title_x']
-    title_text_draw_y = title_bar_y0 + padding['title_y']
-    draw.text((title_text_draw_x, title_text_draw_y), title, font=title_font, fill=title_text_color)
-
-    # --- Key List Drawing ---
-    if disp_keys:
-        key_list_box_h_ideal = total_keys_render_h + 2*padding['key_y']
-        key_list_x0, key_list_x1 = title_bar_x0, title_bar_x1 # Same width as title bar
-        key_list_y0 = title_bar_y1 
-        key_list_y1 = key_list_y0 + key_list_box_h_ideal
-        
-        # Ensure key list box does not exceed image boundaries
-        key_list_y1 = min(key_list_y1, image.height - margin) 
-        current_key_list_box_h = key_list_y1 - key_list_y0 # Actual height after boundary check
-
-        draw.rectangle([(key_list_x0,key_list_y0),(key_list_x1,key_list_y1)],fill=key_list_bg_color)
-        
-        current_text_y = key_list_y0 + padding['key_y']
-        available_text_width_for_keys = final_overlay_box_width - 2 * padding['key_x']
-
-        for i, key_text_item in enumerate(disp_keys):
-            if i >= len(key_line_heights): break 
-            
-            current_key_h = key_line_heights[i]
-            # Check if current key item will fit vertically, if not, try to draw ellipsis
-            if current_text_y + current_key_h > key_list_y0 + current_key_list_box_h - padding['key_y']:
-                _, ellipsis_h = _get_text_measurement(draw,"...",key_font)
-                if current_text_y + ellipsis_h <= key_list_y0 + current_key_list_box_h - padding['key_y']:
-                    ellipsis_w, _ = _get_text_measurement(draw,"...",key_font)
-                    draw.text((key_list_x0 + (final_overlay_box_width - ellipsis_w)/2, current_text_y), "...", font=key_font, fill=ellipsis_color)
-                break 
-            
-            original_key_text_w = actual_key_text_widths[i]
-            text_to_draw = key_text_item
-            
-            if original_key_text_w > available_text_width_for_keys:
-                temp_text = key_text_item
-                # Check width with _get_text_measurement which returns (width, height)
-                while _get_text_measurement(draw, temp_text + "...", key_font)[0] > available_text_width_for_keys and len(temp_text) > 0:
-                    temp_text = temp_text[:-1]
-                text_to_draw = temp_text + "..." if len(temp_text) < len(key_text_item) else temp_text
-            
-            final_key_text_w, _ = _get_text_measurement(draw, text_to_draw, key_font)
-            key_text_draw_x = key_list_x0 + padding['key_x'] + max(0, (available_text_width_for_keys - final_key_text_w) / 2)
-            
-            text_color_to_use = ellipsis_color if "..." in text_to_draw or f"... ({len(keys)-(MAX_KEYS_TO_DISPLAY_OVERLAY-1)} more)" == key_text_item else key_text_color
-            draw.text((key_text_draw_x, current_text_y), text_to_draw, font=key_font, fill=text_color_to_use)
-            current_text_y += current_key_h
-            if i < len(disp_keys)-1: current_text_y += line_spacing
-            
-    return set_pil_image_format_to_png(img_overlayed)
+if __name__ == "__main__":
+    main()
