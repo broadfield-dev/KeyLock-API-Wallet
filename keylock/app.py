@@ -233,7 +233,7 @@ with gr.Blocks(theme=build_interface(), css=custom_css, title="KeyLock Secure St
             markdown_input_create = gr.Textbox(label="Markdown File Structure & Content", placeholder="Example:\n### File: app.py\n# ```python\nprint(\"Hello\")\n# ```", lines=15, interactive=True)
             create_btn = gr.Button("Create Space", variant="primary")
             create_output_md = gr.Markdown(label="Result")
-            create_btn.click(create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
+            create_btn.click(core.create_space, [api_token_ui_input, space_name_create_input, owner_create_input, sdk_create_input, markdown_input_create], create_output_md)
 
 
         # --- "Browse & Edit Files" Tab (Hub-based) ---
