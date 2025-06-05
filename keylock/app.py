@@ -47,7 +47,6 @@ professional_theme = gr.themes.Base(
     input_background_fill="white",
     input_border_color="#CBD5E0",
     input_placeholder_color="#A0AEC0",      # Color of placeholder text
-    input_text_color="#2D3748",             # Color of text typed into inputs
 
     # == Checkboxes (Selected State) ==
     # These apply to the checkbox label and the box itself when selected
