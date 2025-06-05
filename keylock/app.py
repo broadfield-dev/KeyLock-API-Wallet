@@ -137,8 +137,8 @@ def gradio_extract_data(stego_image_pil: Image.Image, password: str):
 
 def build_interface():
     custom_theme = gr.themes.Base(
-        primary_hue="cornflowerblue",
-        secondary_hue="purple",
+        primary_hue="indigo",
+        secondary_hue="cyan",
         neutral_hue="zinc",
         text_size="md",
         spacing_size="md",
