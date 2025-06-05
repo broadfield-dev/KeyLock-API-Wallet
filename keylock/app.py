@@ -205,7 +205,7 @@ def build_interface():
         border: 1px solid #16a085 !important;
     }
     """
-    with gr.Blocks(theme=custom_theme, css=custom_css, title=f"KeyLock Steganography v{__version__}") as keylock_app_interface:
+    with gr.Blocks(theme=custom_theme, title=f"KeyLock Steganography v{__version__}") as keylock_app_interface:
         gr.Markdown(f"<div align='center' style='margin-bottom:15px;'><span style='font-size:2.5em;font-weight:bold;'>🔑 KeyLock v{__version__}</span><h2 style='font-size:1.2em;color:#bdc3c7;margin-top:5px;'>Portable API Key Wallet in a PNG</h2></div>")
         gr.HTML("<div align='center' style='margin-bottom:10px;font-size:0.9em;color:#bdc3c7;'>Securely embed and extract API key-value pairs (or any text) within PNG images using LSB steganography and AES-256-GCM encryption.</div>")
         gr.HTML("<div align='center' style='margin-bottom:15px;font-size:0.9em;'><span style='font-weight:bold;'>GitHub: <a href='https://github.com/broadfield-dev/KeyLock-API-Wallet' target='_blank' style='color:#1abc9c;'>KeyLock-API-Wallet</a> | Decoder Module: <a href='https://github.com/broadfield-dev/keylock-decode' target='_blank' style='color:#1abc9c;'>keylock-decode</a></span></div>")
