@@ -165,6 +165,8 @@ def build_interface():
         background-color: rgba(52, 73, 94, 0.9) !important; 
         color: #ecf0f1 !important; 
     }
+    .gr-button {
+        color: #c6c6fc !important;
     .gr-button.gr-button-primary {
         background-color: #1abc9c !important; 
         color: white !important;
