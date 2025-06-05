@@ -299,7 +299,7 @@ def build_interface():
                             label="Upload KeyLock PNG Image",
                             type="pil",
                             image_mode="RGB",
-                            sources=["upload","clipboard],
+                            sources=["upload","clipboard"],
                             show_download_button=False,
                             interactive=True,
                         )
