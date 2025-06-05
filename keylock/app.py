@@ -64,9 +64,6 @@ professional_theme = gr.themes.Base(
     border_color_accent="*primary_300",
     border_color_primary="#E2E8F0",        # Light grey for general borders
 
-    # Spacing & Radius
-    spacing_size=gr.themes.sizes.spacing_lg, # "md" or "lg" for more breathing room
-
     # Specific component overrides if needed
     # e.g., tab_background_fill="transparent",
     # tab_text_color_selected="*primary_600",
