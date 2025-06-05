@@ -152,6 +152,7 @@ def build_interface():
     }
     span {
         color: #fff;
+        }
     .gradio-container {
         background: transparent !important;
     }
