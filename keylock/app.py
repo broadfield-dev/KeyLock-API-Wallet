@@ -302,7 +302,6 @@ def build_interface():
                             sources=["upload"],
                             show_download_button=False,
                             interactive=True,
-                            info="Upload the PNG image containing KeyLock data."
                         )
                         extract_password_input = gr.Textbox(
                             label="Decryption Password",
