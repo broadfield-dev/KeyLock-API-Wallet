@@ -237,7 +237,7 @@ def build_interface():
                                 label="Upload Your Own PNG Carrier (Optional)",
                                 type="pil",
                                 image_mode="RGB",
-                                sources=["upload"],
+                                sources=["upload","clipboard"],
                                 visible=False, # Initially hidden
                                 show_download_button=False,
                                 interactive=True
@@ -299,7 +299,7 @@ def build_interface():
                             label="Upload KeyLock PNG Image",
                             type="pil",
                             image_mode="RGB",
-                            sources=["upload"],
+                            sources=["upload","clipboard],
                             show_download_button=False,
                             interactive=True,
                         )
